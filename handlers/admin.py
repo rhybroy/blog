@@ -10,29 +10,55 @@ import re
 import hashlib
 import time
 
-from blog import BaseHandler		
+from base import BaseHandler
+
+from session import session
+
+def getPagination(page, total, pagesize):
+	interval = 2 
+	totalPage = total / pagesize +1
+	page = 1 if page < 1 else page
+	page = totalPage if page > totalPage else page
+	hasNextPage = page < totalPage
+	hasPrevPage = page > 1
+	nextPage = page + 1 if hasNextPage else totalPage
+	prevPage = page-1 if hasPrevPage else 1
+	minPage = page - interval if page > interval else 1
+	maxPage = page + interval if page < totalPage - interval else totalPage
+	
+	pagination = dict(
+				page = page,
+				totalPage = totalPage,
+				hasNextPage = hasNextPage,
+				hasPrevPage = hasPrevPage,
+				nextPage = nextPage,
+				prevPage = prevPage,
+				minPage = minPage,
+				maxPage = maxPage,
+			)
+	return pagination 
 
 class ListHandler(BaseHandler):
 	@tornado.web.authenticated
 	def get(self):
 		page = self.get_argument("page", 1);
-		pagesize = 20
+		pagesize = 10
 		page = int(page)
 		if page < 1:
 			page = 1
 		start = (page-1)*pagesize
-		entries = self.db.query("SELECT cid, title, slug, status FROM typecho_contents ORDER BY created "
+		entries = self.db.query("SELECT a.cid, a.title, a.slug, a.status, a.created, c.name as meta FROM typecho_contents a left join typecho_relationships b left join typecho_metas c on a.cid = b.cid and b.mid = c.mid ORDER BY created "
 								"DESC LIMIT %s, %s", start, pagesize)
 		
 		total = self.db.getint("select count(*) from typecho_contents")
-		hasNextPage = total > page*pagesize
 		
-		self.render("admin/index.html", entries=entries, nextpage=page+1, prepage=page-1, hasNextPage=hasNextPage)
+		pagination = getPagination(page, total, pagesize)
+		self.render("admin/index.html", menuType="articles", entries=entries, **pagination)
 
 class MetaListHandler(BaseHandler):
 	def get(self):
 		categorys = self.db.query("select * from typecho_metas where type='category' order by `order`")
-		self.render("admin/metalist.html", metas=categorys)
+		self.render("admin/metalist.html", menuType="categories", metas=categorys)
 
 class MetaHandler(BaseHandler):
 	def get(self):
@@ -147,6 +173,7 @@ class AuthLoginHandler(BaseHandler):
 	def get(self):
 		self.render("admin/login.html", tipmessages=None)
 		
+	@session
 	def post(self):
 		username = self.get_argument("username")
 		password = self.get_argument("password")
@@ -162,7 +189,7 @@ class AuthLoginHandler(BaseHandler):
 			elif hashlib.md5(password+author.authcode).hexdigest() != author.password:
 					tipmessages.append("密码错误!")
 			else:
-				self.set_secure_cookie("user", str(author.name))
+				self.session.set("user", str(author.name))
 		if len(tipmessages) > 0:
 			self.render("admin/login.html", tipmessages=tipmessages)
 		else:
@@ -175,3 +202,11 @@ class AuthLogoutHandler(BaseHandler):
 		self.redirect(self.get_argument("next", "/"))
 
 
+handlers = [
+		(r"/admin/compose", ComposeHandler),
+		(r"/admin/list", ListHandler),
+		(r"/auth/login", AuthLoginHandler),
+		(r"/auth/logout", AuthLogoutHandler),
+		(r"/admin/metalist", MetaListHandler),
+		(r"/admin/meta", MetaHandler),
+]

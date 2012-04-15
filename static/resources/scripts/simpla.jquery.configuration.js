@@ -96,4 +96,9 @@ $(document).ready(function(){
 });
   
   
-  
+function linkok(url){
+    question = confirm("确认吗？");
+    if (question){
+        window.location.href = url;
+    }
+}  

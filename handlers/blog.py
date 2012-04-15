@@ -1,80 +1,12 @@
 #!/usr/bin/env python
 
-import os.path
-import tornado.auth
-import tornado.httpserver
-import tornado.ioloop
 import tornado.web
-from tornado.options import define, options, parse_command_line
 
 import urllib
 import markdown2
-
 import time
 
-import admin
-
-import settings as setting_parm
-
-class Application(tornado.web.Application):
-
-	def __init__(self):
-		handlers = [
-			(r"/", HomeHandler),
-			(r"/page/(\d+)/?", HomeHandler),
-			(r"/category/([^/]+)/?", CategoryHandler),
-			(r"/category/([^/]+)/(\d+)?/?", CategoryHandler),
-			(r"/search/([^/]+)/?", SearchHandler),
-			(r"/search/([^/]+)/(\d+)?/?", SearchHandler),
-			(r"/entry/([^/]+)", EntryHandler),
-			(r"/feed", FeedHandler),
-			(r"/compose", admin.ComposeHandler),
-			(r"/admin/list", admin.ListHandler),
-			(r"/auth/login", admin.AuthLoginHandler),
-			(r"/auth/logout", admin.AuthLogoutHandler),
-			(r"/admin/metalist", admin.MetaListHandler),
-			(r"/admin/meta", admin.MetaHandler),
-		]
-		settings = dict(
-			blog_title=u"Tornado Blog",
-			template_path=os.path.join(os.path.dirname(__file__), "templates"),
-			static_path=os.path.join(os.path.dirname(__file__), "static"),
-			ui_modules={"Entry": EntryModule},
-			xsrf_cookies=True,
-			cookie_secret="11oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
-			login_url="/auth/login",
-			autoescape=None,
-		)
-		tornado.web.Application.__init__(self, handlers, **settings)
-		#self.db = lemondb.connect("mysql", host="localhost", user="root", passwd="", db="blog", charset="utf8")
-		
-		import sys
-		sys.path.append("dbutil")
-		import lemondb
-		self.db = lemondb.connect(options.database, **setting_parm.database_types[options.database])
-
-class BaseHandler(tornado.web.RequestHandler):
-	_start_time = time.time()
-	_finish_time = None
-
-	def request_time(self):
-		"""Returns the amount of time it took for this request to execute."""
-		if self._finish_time is None:
-			return time.time() - self._start_time
-		else:
-			return self._finish_time - self._start_time
-	
-
-	@property
-	def db(self):
-		return self.application.db
-
-	def get_current_user(self):
-		user_id = self.get_secure_cookie("user")
-		if not user_id: return None
-		return self.db.get("SELECT * FROM typecho_users WHERE name = %s", str(user_id))
-		
-
+from base import BaseHandler
 
 class HomeHandler(BaseHandler):
 	def get(self, page=1):
@@ -160,12 +92,13 @@ class EntryModule(tornado.web.UIModule):
 		return self.render_string("modules/entry.html", entry=entry)
 
 
-def main():
-	tornado.options.parse_command_line()
-	http_server = tornado.httpserver.HTTPServer(Application())
-	http_server.listen(options.port)
-	tornado.ioloop.IOLoop.instance().start()
-
-
-if __name__ == "__main__":
-	main()
+handlers = [
+			(r"/", HomeHandler),
+			(r"/page/(\d+)/?", HomeHandler),
+			(r"/category/([^/]+)/?", CategoryHandler),
+			(r"/category/([^/]+)/(\d+)?/?", CategoryHandler),
+			(r"/search/([^/]+)/?", SearchHandler),
+			(r"/search/([^/]+)/(\d+)?/?", SearchHandler),
+			(r"/entry/([^/]+)", EntryHandler),
+			(r"/feed", FeedHandler),
+		]

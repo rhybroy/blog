@@ -1,31 +1,156 @@
+{% extends base.html %}
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head profile="http://gmpg.org/xfn/11">
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Oo.xx</title>
-<meta name="description" content="On the way ..." /> 
-<meta name="keywords" content="typecho,php,blog" /> 
-<meta name="generator" content="Typecho 0.8/10.8.15" /> 
- <script language="javascript">
-    <!--
-    function linkok(url){
-        question = confirm("确认吗？");
-	    if (question){
-	        window.location.href = url;
-	    }
-    }
-    //-->
-</script>
-</head>
-
-<body>
-<p>{% if prepage > 0 %}<a href="?page={{prepage}}">上一页</a>&nbsp;&nbsp;{% end %}{% if hasNextPage %}<a href="?page={{nextpage}}">下一页</a>{% end %}
-&nbsp;&nbsp;<a href="/compose" target="_blank">新文章</a>
-</p>
-{% for entry in entries %}
-    <p><a href="/entry/{{ entry.slug }}" target="_blank">{{ entry.title }}</a>&nbsp;&nbsp;<a href="/compose?id={{entry.cid}}">编辑</a>&nbsp;&nbsp;<a href="javascript:linkok('/compose?id={{entry.cid}}&del=1')">删除</a></p>
+{% block body %}  
+    <!-- Main Content Section with everything -->
+    <noscript>
+    <!-- Show a notification if the user has disabled javascript -->
+    <div class="notification error png_bg">
+      <div> Javascript is disabled or is not supported by your browser. Please <a href="http://browsehappy.com/" title="Upgrade to a better browser">upgrade</a> your browser or <a href="http://www.google.com/support/bin/answer.py?answer=23852" title="Enable Javascript in your browser">enable</a> Javascript to navigate the interface properly.
+        Download From <a href="http://www.exet.tk">exet.tk</a></div>
+    </div>
+    </noscript>
+    <!-- Page Head -->
+    <ul class="shortcut-buttons-set">
+      <li></li>
+    </ul>
+    <!-- End .shortcut-buttons-set -->
+    <div class="clear"></div>
+    <!-- End .clear -->
+    <div class="content-box">
+      <!-- Start Content Box -->
+      <div class="content-box-header">
+        <h3>Content box</h3>
+        <ul class="content-box-tabs">
+          <li><a href="/admin/compose" target="_blank"><span>Write an Article </span></a></li>
+          <!-- href must be unique and match the id of target div -->
+        </ul>
+        <div class="clear"></div>
+      </div>
+      <!-- End .content-box-header -->
+      <div class="content-box-content">
+        <div class="tab-content default-tab" id="tab1">
+          <table>
+            <thead>
+              <tr>
+                <th>
+                  <input class="check-all" type="checkbox" />
+                </th>
+                <th>ID</th>
+                <th>标题</th>
+                <th>类别</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tfoot>
+              <tr>
+                <td colspan="6">
+                  <div class="bulk-actions align-left">
+                    <select name="dropdown">
+                      <option value="option1">Choose an action...</option>
+                      <option value="option2">Edit</option>
+                      <option value="option3">Delete</option>
+                    </select>
+                    <a class="button" href="#">Apply to selected</a> </div>
+                  <div class="pagination"> 
+                      {% if hasPrevPage %}  
+	                  <a href="?page=1" title="First Page">&laquo; First</a>
+	                  <a href="?page={{prevPage}}" title="Previous Page">&laquo; Previous</a> 
+	                  {% end %}
+	                  {% if not hasPrevPage %}  
+                      <a href="#" title="First Page" class="noaction">&laquo; First</a>
+                      <a href="#" title="Previous Page" class="noaction">&laquo; Previous</a> 
+                      {% end %}
+	                  {% for pageNo in range(minPage, maxPage+1) %}
+	                  <a href="?page={{pageNo}}" class="number {% if pageNo == page%}current{% end %}" title="1">{{ pageNo }}</a>
+	                  {% end %}
+	                  {% if hasNextPage %}  
+                      <a href="?page={{nextPage}}" title="Next Page">Next &raquo;</a>
+                      <a href="?page={{totalPage}}" title="Last Page">Last &raquo;</a> 
+                      {% end %}
+                      {% if not hasNextPage %}  
+                      <a href="#" title="Next Page" class="noaction">Next &raquo;</a>
+                      <a href="#" title="Last Page" class="noaction">Last &raquo;</a> 
+                      {% end %}
+	                  
+                  </div>
+                  <!-- End .pagination -->
+                  <div class="clear"></div>
+                </td>
+              </tr>
+            </tfoot>
+            <tbody>
+            {% for entry in entries %}
+              <tr>
+                <td><input type="checkbox" /></td>
+                <td>{{entry.cid}}</td>
+                <td><a href="/entry/{{ entry.slug }}" target="_blank" title="title">{{entry.title}}</a></td>
+                <td>{{entry.meta}}</td>
+                <td>{{entry.created}}</td>
+                <td>
+                  <!-- Icons -->
+                  <a href="/admin/compose?id={{entry.cid}}" target="_blank" title="Edit"><img src="/static/resources/images/icons/pencil.png" alt="Edit" /></a> <a href="javascript:linkok('/compose?id={{entry.cid}}&del=1')" title="Delete"><img src="/static/resources/images/icons/cross.png" alt="Delete" /></a> <a href="#" title="Edit Meta"><img src="/static/resources/images/icons/hammer_screwdriver.png" alt="Edit Meta" /></a> </td>
+              </tr>
+              {% end %}
+            </tbody>
+          </table>
+        </div>
+        <!-- End #tab1 -->
+        <div class="tab-content" id="tab2">
+          <form action="#" method="post">
+            <fieldset>
+            <!-- Set class to "column-left" or "column-right" on fieldsets to divide the form into columns -->
+            <p>
+              <label>Small form input</label>
+              <input class="text-input small-input" type="text" id="small-input" name="small-input" />
+              <span class="input-notification success png_bg">Successful message</span>
+              <!-- Classes for input-notification: success, error, information, attention -->
+              <br />
+              <small>A small description of the field</small> </p>
+            <p>
+              <label>Medium form input</label>
+              <input class="text-input medium-input datepicker" type="text" id="medium-input" name="medium-input" />
+              <span class="input-notification error png_bg">Error message</span> </p>
+            <p>
+              <label>Large form input</label>
+              <input class="text-input large-input" type="text" id="large-input" name="large-input" />
+            </p>
+            <p>
+              <label>Checkboxes</label>
+              <input type="checkbox" name="checkbox1" />
+              This is a checkbox
+              <input type="checkbox" name="checkbox2" />
+              And this is another checkbox </p>
+            <p>
+              <label>Radio buttons</label>
+              <input type="radio" name="radio1" />
+              This is a radio button<br />
+              <input type="radio" name="radio2" />
+              This is another radio button </p>
+            <p>
+              <label>This is a drop down list</label>
+              <select name="dropdown" class="small-input">
+                <option value="option1">Option 1</option>
+                <option value="option2">Option 2</option>
+                <option value="option3">Option 3</option>
+                <option value="option4">Option 4</option>
+              </select>
+            </p>
+            <p>
+              <label>Textarea with WYSIWYG</label>
+              <textarea class="text-input textarea wysiwyg" id="textarea" name="textfield" cols="79" rows="15"></textarea>
+            </p>
+            <p>
+              <input class="button" type="submit" value="Submit" />
+            </p>
+            </fieldset>
+            <div class="clear"></div>
+            <!-- End .clear -->
+          </form>
+        </div>
+        <!-- End #tab2 -->
+      </div>
+      <!-- End .content-box-content -->
+    </div>
+    <!-- End .content-box -->
 {% end %}
-</body>
-</html>
